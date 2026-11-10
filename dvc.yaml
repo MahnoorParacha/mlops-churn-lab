@@ -1,0 +1,43 @@
+# The DVC pipeline. Each stage: a command, what it depends on, what it produces.
+# DVC re-runs a stage ONLY when one of its deps or params has changed.
+stages:
+  get_data:
+    cmd: python -m src.get_data
+    deps:
+      - src/get_data.py
+    params:
+      - data.url
+    outs:
+      - data/raw/churn.csv
+
+  prepare:
+    cmd: python -m src.prepare
+    deps:
+      - src/prepare.py
+      - data/raw/churn.csv
+    params:
+      - data.test_size
+      - data.random_state
+    outs:
+      - data/processed
+
+  train:
+    cmd: python -m src.train
+    deps:
+      - src/train.py
+      - src/model.py
+      - data/processed
+    params:
+      - train
+    outs:
+      - models/model.joblib
+
+  evaluate:
+    cmd: python -m src.evaluate
+    deps:
+      - src/evaluate.py
+      - models/model.joblib
+      - data/processed
+    metrics:
+      - reports/metrics.json:
+          cache: false

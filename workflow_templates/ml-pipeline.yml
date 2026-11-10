@@ -1,0 +1,74 @@
+# Full ML pipeline: test -> train -> quality gate -> deploy (HF, then Azure)
+name: ML Pipeline
+
+# TODO S3.2: Run this workflow on every push to 'main' AND manually from the Actions tab.
+# Hint: two triggers under 'on:'  ->  push (with branches: [main])  and  workflow_dispatch
+on: workflow_dispatch
+
+jobs:
+  # ---------------- JOB 1: train, test, gate ----------------
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Unit tests (cleaning code)
+        run: pytest -q tests/test_prepare.py
+
+      # TODO S3.3: Run the whole DVC pipeline (download -> prepare -> train -> evaluate).
+      # - name: Run DVC pipeline
+
+      # TODO S3.4: Run the quality gate script. If it fails, the job fails here.
+      # - name: Quality gate
+
+      - name: API tests (uses the model just trained)
+        run: pytest -q tests/test_api.py
+
+      - name: Build release folder
+        run: bash scripts/build_release.sh
+
+      # TODO S3.5: Upload the release/ folder as an artifact named "release"
+      # so the deploy jobs use EXACTLY the model that passed the gate.
+      # Hint: uses: actions/upload-artifact@v4  with: name and path
+      # - name: Upload release artifact
+
+  # ---------------- JOB 2: deploy to Hugging Face ----------------
+  deploy-hf:
+    # TODO S3.6: This job must only run AFTER 'train' succeeds.
+    # Hint: needs: <job name>
+    # needs: ???
+    runs-on: ubuntu-latest
+    if: vars.HF_SPACE != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release
+          path: release/
+
+      - name: Upload to Hugging Face Space
+        env:
+          # TODO S3.7: Read the token from the HF_TOKEN secret and the Space id
+          # from the HF_SPACE variable.
+          # Hint: ${{ secrets.NAME }}  and  ${{ vars.NAME }}
+          HF_TOKEN: TODO
+        run: |
+          pip install huggingface_hub==0.26.2
+          python scripts/deploy_hf.py
+
+  # ---------------- JOB 3: push image to Azure (Session 4) ----------------
+  # (Session 4: paste the deploy-azure job here - see Lab 4, Step 8)

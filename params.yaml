@@ -1,0 +1,17 @@
+# All tunable settings live here. Code reads them; DVC watches them.
+data:
+  url: https://raw.githubusercontent.com/IBM/telco-customer-churn-on-icp4d/master/data/Telco-Customer-Churn.csv
+  raw_path: data/raw/churn.csv
+  test_size: 0.2
+  random_state: 42
+
+train:
+  model: random_forest        # random_forest | logistic_regression
+  n_estimators: 100
+  max_depth: 12
+  min_samples_leaf: 10
+  C: 1.0                       # only used by logistic_regression
+  random_state: 42
+
+evaluate:
+  min_f1: 0.55                 # quality gate: block release below this

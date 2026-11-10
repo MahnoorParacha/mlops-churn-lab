@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+mlruns/
+mlartifacts/
+mlflow.db
+release/
+.pytest_cache/
+# DVC-managed outputs are ignored automatically via the .gitignore files DVC creates

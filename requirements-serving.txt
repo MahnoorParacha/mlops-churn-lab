@@ -1,0 +1,8 @@
+# ONLY what the API needs at runtime (goes into the Docker image)
+scikit-learn==1.5.2
+pandas==2.2.3
+numpy==1.26.4
+joblib==1.4.2
+fastapi==0.115.4
+uvicorn==0.32.0
+pydantic==2.9.2

@@ -1,0 +1,10 @@
+# Everything for training + testing (install this on your laptop / in CI)
+-r requirements-serving.txt
+mlflow==2.17.2
+dvc==3.56.0
+pathspec==0.12.1   # newer pathspec breaks this dvc version
+pyyaml==6.0.2
+pytest==8.3.3
+httpx==0.27.2
+huggingface_hub==0.26.2
+requests==2.32.3
