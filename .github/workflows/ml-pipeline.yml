@@ -1,9 +1,10 @@
 # Full ML pipeline: test -> train -> quality gate -> deploy (HF, then Azure)
 name: ML Pipeline
 
-# TODO S3.2: Run this workflow on every push to 'main' AND manually from the Actions tab.
-# Hint: two triggers under 'on:'  ->  push (with branches: [main])  and  workflow_dispatch
-on: workflow_dispatch
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   # ---------------- JOB 1: train, test, gate ----------------
@@ -23,11 +24,11 @@ jobs:
       - name: Unit tests (cleaning code)
         run: pytest -q tests/test_prepare.py
 
-      # TODO S3.3: Run the whole DVC pipeline (download -> prepare -> train -> evaluate).
-      # - name: Run DVC pipeline
+      - name: Run DVC pipeline
+        run: dvc repro
 
-      # TODO S3.4: Run the quality gate script. If it fails, the job fails here.
-      # - name: Quality gate
+      - name: Quality gate
+        run: python -m src.check_gate
 
       - name: API tests (uses the model just trained)
         run: pytest -q tests/test_api.py
@@ -35,16 +36,15 @@ jobs:
       - name: Build release folder
         run: bash scripts/build_release.sh
 
-      # TODO S3.5: Upload the release/ folder as an artifact named "release"
-      # so the deploy jobs use EXACTLY the model that passed the gate.
-      # Hint: uses: actions/upload-artifact@v4  with: name and path
-      # - name: Upload release artifact
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release
+          path: release/
 
   # ---------------- JOB 2: deploy to Hugging Face ----------------
   deploy-hf:
-    # TODO S3.6: This job must only run AFTER 'train' succeeds.
-    # Hint: needs: <job name>
-    # needs: ???
+    needs: train
     runs-on: ubuntu-latest
     if: vars.HF_SPACE != ''
     steps:
@@ -62,10 +62,8 @@ jobs:
 
       - name: Upload to Hugging Face Space
         env:
-          # TODO S3.7: Read the token from the HF_TOKEN secret and the Space id
-          # from the HF_SPACE variable.
-          # Hint: ${{ secrets.NAME }}  and  ${{ vars.NAME }}
-          HF_TOKEN: TODO
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE: ${{ vars.HF_SPACE }}
         run: |
           pip install huggingface_hub==0.26.2
           python scripts/deploy_hf.py
