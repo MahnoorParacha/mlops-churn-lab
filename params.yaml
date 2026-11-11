@@ -14,4 +14,4 @@ train:
   random_state: 42
 
 evaluate:
-  min_f1: 0.55                 # quality gate: block release below this
+  min_f1: 0.90                 # quality gate: block release below this
